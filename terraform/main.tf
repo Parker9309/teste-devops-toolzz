@@ -100,3 +100,61 @@ resource "aws_route_table_association" "private_association_2" {
   subnet_id      = aws_subnet.private_subnet_2.id
   route_table_id = aws_route_table.private.id
 }
+
+resource "aws_security_group" "public_sg" {
+  description = "Security group for public subnet"
+  name        = "public-sg"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "Allow HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "public-sg"
+  }
+}
+
+resource "aws_security_group" "private_sg" {
+  description = "Security group for private subnet"
+  name        = "private-sg"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "Allow traffic from public subnet"
+    from_port   = 3306 # decidir se vou usar mysql
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.public_subnet_1.cidr_block, aws_subnet.public_subnet_2.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "private-sg"
+  }
+}
